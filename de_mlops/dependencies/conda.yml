@@ -1,0 +1,24 @@
+# name: model-env
+# channels:
+#   - conda-forge
+# dependencies:
+#   - python=3.8
+#   - numpy
+#   - pip
+#   - scikit-learn
+#   - scipy
+#   - pandas
+#   - pip:
+#     - inference-schema[numpy-support]==1.3.0
+#     - mlflow
+channels:
+- conda-forge
+dependencies:
+- python=3.8
+- pip
+- numpy
+- scikit-learn
+- pip:
+  - mlflow
+  - azureml-mlflow
+name: mlflow-env
