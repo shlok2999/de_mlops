@@ -1,17 +1,19 @@
+# Import necessary libraries and modules
 from flask import Flask, render_template, request
 import numpy as np
 from azure.ai.ml import MLClient
 from azure.identity import AzureCliCredential
 from azure.ai.ml import load_component
 from azure.ai.ml import dsl, Input, Output
-# import requests
 import json
 import ast
 import os
 
+
+# Create a Flask web application instance
 app = Flask(__name__)
 
-
+# Configuration for the Azure Machine Learning service
 custom_env = 'mlflow-env'
 dependencies_dir = './dependencies'
 cpu_cluster_name = 'cpu-cluster-00'
@@ -54,12 +56,13 @@ def predict():
         "input_data":input_value,
         "params": {}
     }
+
+    # Save the input data as a JSON file
     with open('text.json', 'w') as json_file:
         json.dump(req_file, json_file)
 
-
+    # Authenticate with Azure and make a request to the ML model endpoint
     credential = AzureCliCredential()
-
 
     ml_client = MLClient(
         credential=credential,
@@ -75,13 +78,19 @@ def predict():
 
     result = ast.literal_eval(result)
 
+     # Display the prediction result to the user
     if(result[0]==1):
         return "<h1>Patient has diabetes</h1>"
     return "<h1>Patient do not has diabetes</h1>"
 
+# Define a route for submitting parameters and creating a machine learning job
 @app.route('/parameter', methods=['POST'])
 def parameter():
+
+    # Collect learning rate input from a web form
     lr = float(request.form['LearningRate'])
+
+    # Authenticate with Azure
     credential = AzureCliCredential()
 
 
@@ -91,6 +100,8 @@ def parameter():
         resource_group_name= resource_group,
         workspace_name= workspace_name,
     )
+    
+    # Define a component to be used in a machine learning pipeline
     train_src_dir = "./components/train"
     os.makedirs(train_src_dir, exist_ok=True)
 
@@ -138,7 +149,8 @@ def parameter():
         pipeline_job_learning_rate= lr,
         pipeline_job_registered_model_name=registered_model_name,
     )
-
+    
+    # Create and submit the machine learning job
     pipeline_job = ml_client.jobs.create_or_update(
         pipeline,
         # Project's name
@@ -148,6 +160,6 @@ def parameter():
     ml_client.jobs.stream(pipeline_job.name)
     return "<h1>Job Submitted</h1>"
 
-
+# Start the Flask application if this script is executed
 if __name__ == '__main__':
     app.run(debug=True,port=8080)
